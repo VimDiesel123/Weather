@@ -20,13 +20,38 @@ window.addEventListener("load", () => {
           console.log(data);
           const { temp } = data.main;
           const location = data.name;
-          const {description} = data.weather[0];
+          const { main, description } = data.weather[0];
           temperatureDegree.textContent = temp;
           temperatureDescription.textContent = description;
           locationTimezone.textContent = location;
-         
-          
+          setIcons(main, document.querySelector('.icon'));
         });
     });
+  }
+
+  function setIcons(icon, iconID) {
+    const skycons = new Skycons({ color: "white" });
+    const currentIcon = toSkycon(icon);
+    skycons.play();
+    return skycons.set(iconID, Skycons[currentIcon]);
+  }
+
+  function toSkycon(weather) {
+    switch (weather) {
+      case "Thunderstorm":
+      case "Drizzle":
+      case "Rain":
+        return "RAIN";
+      case "Snow":
+        return "SNOW";
+      case "Fog":
+        return "FOG";
+      case "Squall":
+        return "WIND";
+      case "Clouds":
+        return "CLOUDY";
+      default:
+        return "CLEAR_DAY";
+    }
   }
 });
