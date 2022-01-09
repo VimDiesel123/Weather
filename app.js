@@ -1,72 +1,98 @@
-window.addEventListener("load", () => {
-  let long, lat;
-  let temperatureDescription = document.querySelector(
+const weatherElementsFromDOM = () => {
+  const temperatureDescription = document.querySelector(
     ".temperature-description"
   );
-  let temperatureDegree = document.querySelector(".temperature-degree");
-  let locationTimezone = document.querySelector(".location-timezone");
+  const temperatureDegree = document.querySelector(".temperature-degree");
+  const locationTimezone = document.querySelector(".location-timezone");
   const temperatureSection = document.querySelector(".temperature");
   const temperatureSpan = document.querySelector(".temperature span");
+  return {
+    tempDescription: temperatureDescription,
+    tempDegree: temperatureDegree,
+    location: locationTimezone,
+    tempSection: temperatureSection,
+    tempSpan: temperatureSpan,
+  };
+};
+
+const setWeather = (data) => {
+  const { temp, loc, description } = extractWeatherData(data);
+  const { tempDescription, tempDegree, location, tempSection, tempSpan } =
+    weatherElementsFromDOM();
+  updateWeatherInfo(
+    [tempDegree, tempDescription, location],
+    [temp, description, loc]
+  );
+};
+const updateWeatherInfo = (weatherInfo, data) => {
+  weatherInfo.map((elem, index) => setElementText(elem, data[index]));
+};
+
+const setElementText = (element, text) => (element.textContent = text);
+
+const coordAPICall = (lat, long) =>
+  `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&units=imperial&appid=6bd7ee9ffe2d64cf0fa1a487d4946163`;
+
+const extractWeatherData = (data) => {
+  return {
+    temp: data.main.temp,
+    loc: data.name,
+    main: data.weather[0].main,
+    description: data.weather[0].description,
+  };
+};
+
+window.addEventListener("load", () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition((position) => {
       console.log(position);
-      long = position.coords.longitude;
-      lat = position.coords.latitude;
-
-      const api = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&units=imperial&appid=6bd7ee9ffe2d64cf0fa1a487d4946163`;
+      const api = coordAPICall(
+        position.coords.latitude,
+        position.coords.longitude
+      );
       fetch(api)
         .then((response) => {
           return response.json();
         })
         .then((data) => {
-          console.log(data);
-          const { temp } = data.main;
-          const location = data.name;
-          const { main, description } = data.weather[0];
-          temperatureDegree.textContent = temp;
-          temperatureDescription.textContent = description;
-          locationTimezone.textContent = location;
+          setWeather(data);
 
-          setIcons(main, document.querySelector(".icon"));
+          const { main, temp } = extractWeatherData(data);
+          setIcon(main, document.querySelector(".icon"));
 
-          temperatureSection.addEventListener("click", () => {
+          const { tempSection, tempSpan, tempDegree } =
+            weatherElementsFromDOM();
+
+          tempSection.addEventListener("click", () => {
             const toCelsius = (farenheight) => (farenheight - 32) * (5 / 9);
-            if(temperatureSpan.textContent === 'F'){
-              temperatureSpan.textContent = 'C';
-              temperatureDegree.textContent = Math.floor(toCelsius(temp));
-            }
-            else{
-              temperatureSpan.textContent = 'F';
-              temperatureDegree.textContent = temp;
+            if (tempSpan.textContent === "F") {
+              tempSpan.textContent = "C";
+              tempDegree.textContent = Math.floor(toCelsius(temp));
+            } else {
+              tempSpan.textContent = "F";
+              tempDegree.textContent = temp;
             }
           });
         });
     });
   }
 
-  function setIcons(icon, iconID) {
+  const weatherToSkycon = new Map([
+    ["Thunderstorm", "RAIN"],
+    ["Drizzle", "RAIN"],
+    ["Rain", "RAIN"],
+    ["Snow", "SNOW"],
+    ["Fog", "FOG"],
+    ["Squall", "WIND"],
+    ["Clouds", "CLOUDY"],
+    ["Clear", "CLEAR_DAY"],
+  ]);
+
+  function setIcon(icon, iconID) {
     const skycons = new Skycons({ color: "white" });
-    const currentIcon = toSkycon(icon);
+    const currentIcon = weatherToSkycon.get(icon);
+    console.log(currentIcon);
     skycons.play();
     return skycons.set(iconID, Skycons[currentIcon]);
-  }
-
-  function toSkycon(weather) {
-    switch (weather) {
-      case "Thunderstorm":
-      case "Drizzle":
-      case "Rain":
-        return "RAIN";
-      case "Snow":
-        return "SNOW";
-      case "Fog":
-        return "FOG";
-      case "Squall":
-        return "WIND";
-      case "Clouds":
-        return "CLOUDY";
-      default:
-        return "CLEAR_DAY";
-    }
   }
 });
