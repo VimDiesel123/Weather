@@ -17,13 +17,13 @@ const weatherElementsFromDOM = () => {
 
 const setWeather = (data) => {
   const { temp, loc, description } = extractWeatherData(data);
-  const { tempDescription, tempDegree, location, tempSection, tempSpan } =
-    weatherElementsFromDOM();
+  const { tempDescription, tempDegree, location } = weatherElementsFromDOM();
   updateWeatherInfo(
     [tempDegree, tempDescription, location],
     [temp, description, loc]
   );
 };
+
 const updateWeatherInfo = (weatherInfo, data) => {
   weatherInfo.map((elem, index) => setElementText(elem, data[index]));
 };
@@ -40,6 +40,17 @@ const extractWeatherData = (data) => {
     main: data.weather[0].main,
     description: data.weather[0].description,
   };
+};
+
+const convertTemp = (temp, tempSpan, tempDegree) => {
+  const toCelsius = (farenheight) => (farenheight - 32) * (5 / 9);
+  if (tempSpan.textContent === "F") {
+    tempSpan.textContent = "C";
+    tempDegree.textContent = Math.floor(toCelsius(temp));
+  } else {
+    tempSpan.textContent = "F";
+    tempDegree.textContent = temp;
+  }
 };
 
 window.addEventListener("load", () => {
@@ -64,14 +75,7 @@ window.addEventListener("load", () => {
             weatherElementsFromDOM();
 
           tempSection.addEventListener("click", () => {
-            const toCelsius = (farenheight) => (farenheight - 32) * (5 / 9);
-            if (tempSpan.textContent === "F") {
-              tempSpan.textContent = "C";
-              tempDegree.textContent = Math.floor(toCelsius(temp));
-            } else {
-              tempSpan.textContent = "F";
-              tempDegree.textContent = temp;
-            }
+            convertTemp(temp, tempSpan, tempDegree);
           });
         });
     });
