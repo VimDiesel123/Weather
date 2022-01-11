@@ -94,9 +94,7 @@ window.addEventListener("load", () => {
 
   function setIcon(icon, iconID) {
     const skycons = new Skycons({ color: "white" });
-    const currentIcon = weatherToSkycon.get(icon);
-    console.log(currentIcon);
     skycons.play();
-    return skycons.set(iconID, Skycons[currentIcon]);
+    return skycons.set(iconID, Skycons[weatherToSkycon.get(icon)]);
   }
 });
